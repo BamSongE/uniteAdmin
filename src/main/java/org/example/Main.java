@@ -10,9 +10,9 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        try (Socket clientSocket = new Socket("172.30.67.203", 8888)) {
+        try (Socket clientSocket = new Socket("172.30.86.32", 8888)) {
             Scanner sc = new Scanner(System.in);
-
+            //안서호 pc ip 주소: 172.30.86.32, port: 8888
             System.out.println("서버 연결 성공");
 
             // 버퍼 스트림으로 감싸서 성능 향상
@@ -29,24 +29,26 @@ public class Main {
             // FirstView에 LoginView 전달
             FirstView firstView = new FirstView(loginView);
 
-//            int InputInt;
-//            do {
-            firstView.View();
-//            InputInt = sc.nextInt();
-//
-//            if(sc.nextInt() == 1) {
-//                loginView.printSignIn();
-//            }
-////            else if(sc.nextInt() == 2) {
-////                  회원가입 기능 추가 예정
-////            }
-//            else {
-//
-//            }
-//            }
-//
-//            while ( != 3)
+            int choice;
 
+            firstView.View();
+            choice = sc.nextInt();
+            while (choice != 3){
+
+            if(choice == 1) {
+                loginView.printSignIn();
+            }
+//            else if(sc.nextInt() == 2) {
+//                  회원가입 기능 추가 예정
+//            }
+            else {
+                System.out.println("정상적인 입력이 아닙니다.");
+            }
+                firstView.View();
+                choice = sc.nextInt();
+            }
+
+            System.out.println("연결을 종료합니다.");
         } catch (UnknownHostException e) {
             System.err.println("호스트를 찾을 수 없습니다: " + e.getMessage());
         } catch (IOException e) {
