@@ -2,8 +2,6 @@ package org.example.global;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,14 +34,19 @@ public class Protocol {
     // Application Codes (0x03)
     public static final byte CODE_APPLICATION_SUBMIT = 0x01; // 신청서 제출
     public static final byte CODE_APPLICATION_STATUS = 0x02; // 신청 상태 조회
+    public static final byte CODE_APPLICATION_LIST = 0x11;   // 신청자 목록 조회
 
     // Room Assignment Codes (0x04)
     public static final byte CODE_ROOM_PASS_CHECK = 0x01;   // 합격 여부 조회
     public static final byte CODE_ROOM_INFO = 0x02;         // 호실 정보 조회
+    public static final byte CODE_ROOM_SELECT = 0x11;       // 합격자 선발
+    public static final byte CODE_ROOM_ASSIGN = 0x12;       // 호실 배정
 
     // Payment Codes (0x05)
     public static final byte CODE_PAYMENT_AMOUNT = 0x01;    // 납부 금액 조회
     public static final byte CODE_PAYMENT_PAY = 0x02;       // 납부 처리
+    public static final byte CODE_PAYMENT_PAID_LIST = 0x11; // 납부자 명단
+    public static final byte CODE_PAYMENT_UNPAID_LIST = 0x12; // 미납자 명단
 
     // Document Codes (0x06)
     public static final byte CODE_DOCUMENT_SUBMIT = 0x01;   // 결핵진단서 제출

@@ -6,10 +6,13 @@ import org.example.mvc.view.LoginView;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
         try (Socket clientSocket = new Socket("172.30.67.203", 8888)) {
+            Scanner sc = new Scanner(System.in);
+
             System.out.println("서버 연결 성공");
 
             // 버퍼 스트림으로 감싸서 성능 향상
@@ -25,7 +28,24 @@ public class Main {
 
             // FirstView에 LoginView 전달
             FirstView firstView = new FirstView(loginView);
-            firstView.firstView();
+
+//            int InputInt;
+//            do {
+            firstView.View();
+//            InputInt = sc.nextInt();
+//
+//            if(sc.nextInt() == 1) {
+//                loginView.printSignIn();
+//            }
+////            else if(sc.nextInt() == 2) {
+////                  회원가입 기능 추가 예정
+////            }
+//            else {
+//
+//            }
+//            }
+//
+//            while ( != 3)
 
         } catch (UnknownHostException e) {
             System.err.println("호스트를 찾을 수 없습니다: " + e.getMessage());
