@@ -29,21 +29,19 @@ public class Main {
             // FirstView에 LoginView 전달
             FirstView firstView = new FirstView(loginView);
 
-            int choice;
-
+            System.out.println("안녕하세요. 기숙사 관리 시스템입니다.");
             firstView.View();
-            choice = sc.nextInt();
+            int choice = sc.nextInt();
             while (choice != 3){
-
-            if(choice == 1) {
-                loginView.printSignIn();
-            }
+                if(choice == 1) {
+                    loginView.printSignIn();
+                }
 //            else if(sc.nextInt() == 2) {
 //                  회원가입 기능 추가 예정
 //            }
-            else {
-                System.out.println("정상적인 입력이 아닙니다.");
-            }
+                else {
+                    System.out.println("정상적인 입력이 아닙니다.");
+                }
                 firstView.View();
                 choice = sc.nextInt();
             }

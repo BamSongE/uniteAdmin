@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -70,9 +71,49 @@ public class AdminView {
 
     private void handleApplicationList() throws IOException {
         System.out.println("\n=== 신청자 조회 ===");
+
+        // 서버에 신청자 조회 요청 보내기
+        scanner.nextLine(); // 입력 버퍼 비우기
+        System.out.print("조회할 상태를 입력하세요 (예: '승인', '대기', '취소' 등): ");
+        String status = scanner.nextLine();
+        System.out.print("기숙사 선호도를 입력하세요 (예: '2인실', '4인실' 등): ");
+        String preference = scanner.nextLine();
+
+        // 요청 데이터 생성
+        String requestData = String.format("%s,%s", status, preference);
         Protocol protocol = new Protocol(Protocol.TYPE_APPLICATION, Protocol.CODE_APPLICATION_LIST);
+        protocol.setData(requestData.getBytes(StandardCharsets.UTF_8));
         sendProtocol(protocol);
+
+        // 서버 응답 처리
+        byte type = in.readByte();
+        byte code = in.readByte();
+        short length = in.readShort();
+
+        byte[] data = null;
+        if (length > 0) {
+            data = new byte[length];
+            in.readFully(data);
+        }
+
+        // 응답 데이터 활용
+        if (type == Protocol.TYPE_RESPONSE && code == Protocol.CODE_SUCCESS) {
+            if (data != null) {
+                String applicantList = new String(data, StandardCharsets.UTF_8); // UTF-8로 변환
+                System.out.println("\n신청자 목록:");
+                System.out.println(applicantList); // 출력 형식: "학번,이름,상태,납부상태,신청일"
+            } else {
+                System.out.println("신청자 목록이 비어 있습니다.");
+            }
+        } else if (type == Protocol.TYPE_RESPONSE && code == Protocol.CODE_FAIL) {
+            String errorMessage = data != null ? new String(data, StandardCharsets.UTF_8) : "알 수 없는 오류가 발생했습니다.";
+            System.out.println("신청자 조회에 실패했습니다: " + errorMessage);
+        } else {
+            System.out.println("서버에서 잘못된 응답을 받았습니다.");
+        }
     }
+
+
 
     private void handleScheduleAndFee() throws IOException {
         while (true) {
@@ -125,12 +166,44 @@ public class AdminView {
     private void registerFee() throws IOException {
         scanner.nextLine(); // 버퍼 비우기
         System.out.println("\n=== 비용 등록 ===");
+        System.out.print("기숙사 이름: ");
+        String dorName = scanner.nextLine();
+        System.out.println("설정하고 싶은 비용의 숫자를 입력하세요");
+        System.out.println("1. 2인실 숙박비");
+        System.out.println("2. 4인실 숙박비");
+        System.out.println("3. 주 5일 식사비");
+        System.out.println("4. 주 7일 식사비");
+        int feeChoose = scanner.nextInt();
         System.out.print("기숙사비(원): ");
-        String fee = scanner.nextLine();
+        int fee = scanner.nextInt();
 
-        Protocol protocol = new Protocol(Protocol.TYPE_SCHEDULE, Protocol.CODE_SCHEDULE_FEE_REG);
-        protocol.setData(fee);
-        sendProtocol(protocol);
+        String feeType;
+        switch (feeChoose) {
+            case 1:
+                feeType = "ROOM_2";
+                break;
+            case 2:
+                feeType = "ROOM_4";
+                break;
+            case 3:
+                feeType = "MEAL_5";
+                break;
+            case 4:
+                feeType = "MEAL_7";
+                break;
+            default:
+                feeType = null;
+                System.err.println("정상적인 입력이 아닙니다.");
+                System.err.println("비용 등록을 종료합니다.");
+                break;
+        }
+
+        if(feeType != null) {
+            Protocol protocol = new Protocol(Protocol.TYPE_SCHEDULE, Protocol.CODE_SCHEDULE_FEE_REG);
+            protocol.setData(dorName + "," + feeType + "," + fee);
+            sendProtocol(protocol);
+        }
+
     }
 
     private void handleStudentSelection() throws IOException {

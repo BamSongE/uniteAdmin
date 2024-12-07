@@ -22,6 +22,7 @@ public class LoginView {
         this.scanner = new Scanner(System.in);
     }
 
+
     public void printSignIn() {
         try {
             System.out.println("=== 로그인 ===");
