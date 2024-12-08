@@ -11,8 +11,10 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         try (Socket clientSocket = new Socket("172.30.86.32", 8888)) {
-            Scanner sc = new Scanner(System.in);
             //안서호 pc ip 주소: 172.30.86.32, port: 8888
+            //윤동근 pc ip 주소: 172.30.67.203, port: 8888
+            Scanner sc = new Scanner(System.in);
+
             System.out.println("서버 연결 성공");
 
             // 버퍼 스트림으로 감싸서 성능 향상

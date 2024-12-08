@@ -74,10 +74,10 @@ public class AdminView {
 
         // 서버에 신청자 조회 요청 보내기
         scanner.nextLine(); // 입력 버퍼 비우기
-        System.out.print("조회할 상태를 입력하세요 (예: '승인', '대기', '취소' 등): ");
+        System.out.print("조회할 상태를 입력하세요 ('대기', '검토', '승인', '거부'): ");
         String status = scanner.nextLine();
-        System.out.print("기숙사 선호도를 입력하세요 (예: '2인실', '4인실' 등): ");
-        String preference = scanner.nextLine();
+        System.out.print("기숙사 선호도를 입력하세요 (1지망이면 '1', 2지망이면 '2'): ");
+        int preference = scanner.nextInt();
 
         // 요청 데이터 생성
         String requestData = String.format("%s,%s", status, preference);
@@ -179,23 +179,14 @@ public class AdminView {
 
         String feeType;
         switch (feeChoose) {
-            case 1:
-                feeType = "ROOM_2";
-                break;
-            case 2:
-                feeType = "ROOM_4";
-                break;
-            case 3:
-                feeType = "MEAL_5";
-                break;
-            case 4:
-                feeType = "MEAL_7";
-                break;
-            default:
+            case 1 -> feeType = "ROOM_2";
+            case 2 -> feeType = "ROOM_4";
+            case 3 -> feeType = "MEAL_5";
+            case 4 -> feeType = "MEAL_7";
+            default -> {
                 feeType = null;
-                System.err.println("정상적인 입력이 아닙니다.");
-                System.err.println("비용 등록을 종료합니다.");
-                break;
+                System.err.println("잘못된 선택입니다. 비용 등록을 종료합니다.");
+            }
         }
 
         if(feeType != null) {
@@ -203,19 +194,75 @@ public class AdminView {
             protocol.setData(dorName + "," + feeType + "," + fee);
             sendProtocol(protocol);
         }
-
     }
 
     private void handleStudentSelection() throws IOException {
         System.out.println("\n=== 입사자 선발 ===");
+
+        // 서버로 입사자 선발 요청 보내기
         Protocol protocol = new Protocol(Protocol.TYPE_ROOM, Protocol.CODE_ROOM_SELECT);
         sendProtocol(protocol);
+
+        // 서버 응답 처리
+        byte type = in.readByte();
+        byte code = in.readByte();
+        short length = in.readShort();
+
+        byte[] data = null;
+        if (length > 0) {
+            data = new byte[length];
+            in.readFully(data); // 응답 데이터 읽기
+        }
+
+        // 응답 데이터 활용
+        if (type == Protocol.TYPE_RESPONSE && code == Protocol.CODE_SUCCESS) {
+            String successMessage;
+            if (data != null) {
+                // 데이터가 있을 경우 UTF-8로 변환
+                successMessage = new String(data, StandardCharsets.UTF_8);
+            } else {
+                successMessage = "응답 데이터 없음";
+            }
+
+            System.out.println("\n입사자 선발 결과:");
+            System.out.println(successMessage);
+        } else if (type == Protocol.TYPE_RESPONSE && code == Protocol.CODE_FAIL) {
+            String errorMessage = data != null ? new String(data, StandardCharsets.UTF_8) : "알 수 없는 오류가 발생했습니다.";
+            System.out.println("입사자 선발 중 오류 발생: " + errorMessage);
+        } else {
+            System.out.println("서버에서 잘못된 응답을 받았습니다.");
+        }
     }
 
     private void handleRoomAssignment() throws IOException {
         System.out.println("\n=== 호실 배정 ===");
+
+        // 서버로 호실 배정 요청 보내기
         Protocol protocol = new Protocol(Protocol.TYPE_ROOM, Protocol.CODE_ROOM_ASSIGN);
         sendProtocol(protocol);
+
+        // 서버 응답 처리
+        byte type = in.readByte(); // 응답 타입
+        byte code = in.readByte(); // 응답 코드
+        short length = in.readShort(); // 응답 데이터 길이
+
+        byte[] data = null;
+        if (length > 0) {
+            data = new byte[length];
+            in.readFully(data); // 응답 데이터 읽기
+        }
+
+        // 응답 데이터 활용
+        if (type == Protocol.TYPE_RESPONSE && code == Protocol.CODE_SUCCESS) {
+            String successMessage = data != null ? new String(data, StandardCharsets.UTF_8) : "호실 배정 결과 없음";
+            System.out.println("\n호실 배정 결과:");
+            System.out.println(successMessage);
+        } else if (type == Protocol.TYPE_RESPONSE && code == Protocol.CODE_FAIL) {
+            String errorMessage = data != null ? new String(data, StandardCharsets.UTF_8) : "알 수 없는 오류가 발생했습니다.";
+            System.out.println("호실 배정 중 오류 발생: " + errorMessage);
+        } else {
+            System.out.println("서버에서 잘못된 응답을 받았습니다.");
+        }
     }
 
     private void handlePaymentCheck() throws IOException {
