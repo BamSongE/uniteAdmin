@@ -113,8 +113,6 @@ public class AdminView {
         }
     }
 
-
-
     private void handleScheduleAndFee() throws IOException {
         while (true) {
             System.out.println("\n=== 일정 및 비용 등록 ===");
@@ -275,33 +273,60 @@ public class AdminView {
 
             try {
                 int choice = scanner.nextInt();
+
+                Protocol protocol;
                 switch (choice) {
                     case 1 -> {
-                        Protocol protocol = new Protocol(Protocol.TYPE_PAYMENT, Protocol.CODE_PAYMENT_PAID_LIST);
+                        protocol = new Protocol(Protocol.TYPE_PAYMENT, Protocol.CODE_PAYMENT_PAID_LIST);
                         sendProtocol(protocol);
-                        return;
+                        handlePaymentResponse();
+                        return; // 완료 후 이전 메뉴로 이동
                     }
                     case 2 -> {
-                        Protocol protocol = new Protocol(Protocol.TYPE_PAYMENT, Protocol.CODE_PAYMENT_UNPAID_LIST);
+                        protocol = new Protocol(Protocol.TYPE_PAYMENT, Protocol.CODE_PAYMENT_UNPAID_LIST);
                         sendProtocol(protocol);
-                        return;
+                        handlePaymentResponse();
+                        return; // 완료 후 이전 메뉴로 이동
                     }
                     case 0 -> {
-                        return;
+                        return; // 이전 메뉴로 이동
                     }
                     default -> {
                         System.out.println("잘못된 선택입니다. 다시 선택해주세요.");
-                        System.out.print("계속하려면 엔터를 누르세요...");
-                        scanner.nextLine();
-                        scanner.nextLine();
                     }
                 }
             } catch (InputMismatchException e) {
                 System.out.println("올바른 숫자를 입력해주세요.");
-                scanner.nextLine();
-                System.out.print("계속하려면 엔터를 누르세요...");
-                scanner.nextLine();
+                scanner.nextLine(); // 잘못된 입력 처리
             }
+        }
+    }
+
+    /**
+     * 서버에서 받은 응답을 처리하고 납부/미납 명단을 출력하는 메서드
+     */
+    private void handlePaymentResponse() throws IOException {
+        byte type = in.readByte();
+        byte code = in.readByte();
+        short length = in.readShort();
+
+        byte[] data = null;
+        if (length > 0) {
+            data = new byte[length];
+            in.readFully(data);
+        }
+
+        if (type == Protocol.TYPE_RESPONSE && code == Protocol.CODE_SUCCESS) {
+            // 응답 데이터를 UTF-8 문자열로 변환 후 출력
+            String paymentList = data != null ? new String(data, StandardCharsets.UTF_8) : "결과 데이터 없음";
+            System.out.println("\n결과:");
+            System.out.println(paymentList);
+        } else if (type == Protocol.TYPE_RESPONSE && code == Protocol.CODE_FAIL) {
+            // 실패 메시지 출력
+            String errorMessage = data != null ? new String(data, StandardCharsets.UTF_8) : "알 수 없는 오류가 발생했습니다.";
+            System.out.println("요청 처리 중 오류 발생: " + errorMessage);
+        } else {
+            System.out.println("서버에서 잘못된 응답을 받았습니다.");
         }
     }
 

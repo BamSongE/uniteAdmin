@@ -25,14 +25,13 @@ public class Main {
             DataOutputStream out = new DataOutputStream(bos);
             DataInputStream in = new DataInputStream(bis);
 
+            FirstView firstView = new FirstView();
+
             // LoginView 생성 및 의존성 주입
             LoginView loginView = new LoginView(clientSocket, in, out);
 
-            // FirstView에 LoginView 전달
-            FirstView firstView = new FirstView(loginView);
-
             System.out.println("안녕하세요. 기숙사 관리 시스템입니다.");
-            firstView.View();
+            firstView.view();
             int choice = sc.nextInt();
             while (choice != 3){
                 if(choice == 1) {
@@ -44,7 +43,7 @@ public class Main {
                 else {
                     System.out.println("정상적인 입력이 아닙니다.");
                 }
-                firstView.View();
+                firstView.view();
                 choice = sc.nextInt();
             }
 
