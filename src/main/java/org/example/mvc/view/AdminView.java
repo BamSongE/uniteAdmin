@@ -30,7 +30,8 @@ public class AdminView {
                 System.out.println("3. 입사자 선발");
                 System.out.println("4. 호실 배정");
                 System.out.println("5. 비용 납부 확인");
-                System.out.println("6. 진단서 제출 확인");
+                System.out.println("6. 결핵진단서 제출 확인");
+                System.out.println("7. 퇴사 신청 확인 및 환불");
                 System.out.println("0. 로그아웃");
                 System.out.print("메뉴 선택: ");
 
@@ -339,7 +340,7 @@ public class AdminView {
 
     private void handleDocumentCheck() throws IOException {
         while (true) {
-            System.out.println("\n=== 진단서 제출 확인 ===");
+            System.out.println("\n=== 결핵진단서 제출 확인 ===");
             System.out.println("1. 제출자 명단");
             System.out.println("2. 미제출자 명단");
             System.out.println("0. 이전 메뉴로");
