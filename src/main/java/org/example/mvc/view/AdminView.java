@@ -47,7 +47,9 @@ public class AdminView {
                     case 6 -> handleDocumentCheck();
                     case 7 -> handleWithDrawalRequest();
                     case 0 -> {
-                        System.out.println("로그아웃 합니다.");
+                        System.out.println("==================");
+                        System.out.println("  로그아웃 합니다.");
+                        System.out.println("==================");
                         return;
                     }
                     default -> {
@@ -104,6 +106,8 @@ public class AdminView {
         } else {
             System.out.println("서버에서 잘못된 응답을 받았습니다.");
         }
+
+        printWannaGoNext();
     }
 
     private void handleScheduleAndFee() throws IOException {
