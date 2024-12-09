@@ -8,6 +8,6 @@ public class FirstView {
 
     public void view() {
         System.out.println("수행할 일을 아래 번호로 입력해주세요.");
-        System.out.println("1. 로그인\t2. 회원가입\t3.종료");
+        System.out.println("1. 로그인  2. 회원가입  3.종료");
     }
 }

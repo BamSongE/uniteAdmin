@@ -36,6 +36,7 @@ public class AdminView {
                 System.out.print("메뉴 선택: ");
 
                 int choice = scanner.nextInt();
+                scanner.nextLine();
 
                 switch (choice) {
                     case 1 -> handleScheduleAndFee();
@@ -52,7 +53,6 @@ public class AdminView {
                     default -> {
                         System.out.println("잘못된 선택입니다. 다시 선택해주세요.");
                         System.out.print("계속하려면 엔터를 누르세요...");
-                        scanner.nextLine();
                         scanner.nextLine();
                     }
                 }
@@ -76,7 +76,7 @@ public class AdminView {
 
         // 서버에 신청자 조회 요청 보내기
         scanner.nextLine(); // 입력 버퍼 비우기
-        System.out.print("조회할 상태를 입력하세요 ('대기', '검토', '승인', '거부'): ");
+        System.out.print("조회할 상태를 입력하세요 ('대기', '선발', '승인', '거부'): ");
         String status = scanner.nextLine();
         System.out.print("기숙사 선호도를 입력하세요 (1지망이면 '1', 2지망이면 '2'): ");
         int preference = scanner.nextInt();
@@ -124,16 +124,14 @@ public class AdminView {
                     }
                     default -> {
                         System.out.println("잘못된 선택입니다. 다시 선택해주세요.");
-                        System.out.print("계속하려면 엔터를 누르세요...");
-                        scanner.nextLine();
-                        scanner.nextLine();
                     }
                 }
+
+                printWannaGoNext();
+
             } catch (InputMismatchException e) {
                 System.out.println("올바른 숫자를 입력해주세요.");
-                scanner.nextLine();
-                System.out.print("계속하려면 엔터를 누르세요...");
-                scanner.nextLine();
+                printWannaGoNext();
             }
         }
     }
@@ -188,8 +186,6 @@ public class AdminView {
         System.out.println("4. 주 7일 식사비");
         System.out.println("설정하고 싶은 비용의 숫자를 입력하세요:");
         int feeChoose = scanner.nextInt();
-        System.out.print("기숙사비(원): ");
-        int fee = scanner.nextInt();
 
         // 비용 유형 매핑
         String feeType;
@@ -203,6 +199,9 @@ public class AdminView {
                 return;
             }
         }
+
+        System.out.print("기숙사비(원): ");
+        int fee = scanner.nextInt();
         // 요청 데이터 생성 및 전송
         String feeData = dormName + "," + feeType + "," + fee;
         Protocol protocol = new Protocol(Protocol.TYPE_SCHEDULE, Protocol.CODE_SCHEDULE_FEE_REG);
@@ -258,6 +257,8 @@ public class AdminView {
         } else {
             System.out.println("서버에서 잘못된 응답을 받았습니다.");
         }
+
+        printWannaGoNext();
     }
 
     /**
@@ -285,6 +286,8 @@ public class AdminView {
         } else {
             System.out.println("서버에서 잘못된 응답을 받았습니다.");
         }
+
+        printWannaGoNext();
     }
 
     private void handlePaymentCheck() throws IOException {
@@ -319,6 +322,9 @@ public class AdminView {
                         System.out.println("잘못된 선택입니다. 다시 선택해주세요.");
                     }
                 }
+
+                printWannaGoNext();
+
             } catch (InputMismatchException e) {
                 System.out.println("올바른 숫자를 입력해주세요.");
                 scanner.nextLine(); // 잘못된 입력 처리
@@ -344,43 +350,35 @@ public class AdminView {
     }
 
     private void handleDocumentCheck() throws IOException {
-        while (true) {
-            System.out.println("\n=== 결핵진단서 제출 확인 ===");
-            System.out.println("1. 제출자 명단");
-            System.out.println("2. 미제출자 명단");
-            System.out.println("0. 이전 메뉴로");
-            System.out.print("선택: ");
+            System.out.println("\n=== 결핵진단서 제출 여부 명단 ===");
 
-            try {
-                int choice = scanner.nextInt();
-                switch (choice) {
-                    case 1 -> {
-                        Protocol protocol = new Protocol(Protocol.TYPE_DOCUMENT, Protocol.CODE_DOCUMENT_STATUS);
-                        sendProtocol(protocol);
-                        return;
-                    }
-                    case 2 -> {
-                        Protocol protocol = new Protocol(Protocol.TYPE_DOCUMENT, Protocol.CODE_DOCUMENT_STATUS);
-                        protocol.setData("unsubmitted"); // 미제출자 구분을 위한 데이터
-                        sendProtocol(protocol);
-                        return;
-                    }
-                    case 0 -> {
-                        return;
-                    }
-                    default -> {
-                        System.out.println("잘못된 선택입니다. 다시 선택해주세요.");
-                        System.out.print("계속하려면 엔터를 누르세요...");
-                        scanner.nextLine();
-                        scanner.nextLine();
-                    }
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("올바른 숫자를 입력해주세요.");
-                scanner.nextLine();
-                System.out.print("계속하려면 엔터를 누르세요...");
-                scanner.nextLine();
+        try {
+            Protocol protocol = new Protocol(Protocol.TYPE_DOCUMENT, Protocol.CODE_DOCUMENT_STATUS);
+            sendProtocol(protocol);
+
+            protocol = readProtocol(); // 서버 응답 읽기
+
+            // 응답 데이터 활용
+            if (protocol.getType() == Protocol.TYPE_RESPONSE && protocol.getCode() == Protocol.CODE_SUCCESS) {
+                String result = protocol.getData() != null
+                        ? new String(protocol.getData(), StandardCharsets.UTF_8)
+                        : "응답 데이터 없음";
+                System.out.println("\n결과:");
+                System.out.println(result);
+            } else if (protocol.getType() == Protocol.TYPE_RESPONSE && protocol.getCode() == Protocol.CODE_FAIL) {
+                String errorMessage = protocol.getData() != null
+                        ? new String(protocol.getData(), StandardCharsets.UTF_8)
+                        : "알 수 없는 오류가 발생했습니다.";
+                System.out.println("오류 발생: " + errorMessage);
+            } else {
+                System.out.println("서버에서 잘못된 응답을 받았습니다.");
             }
+
+            printWannaGoNext();
+
+        } catch (InputMismatchException e) {
+            System.out.println("올바른 숫자를 입력해주세요.");
+            printWannaGoNext();
         }
     }
 
@@ -433,15 +431,15 @@ public class AdminView {
                     }
                     default -> {
                         System.out.println("잘못된 선택입니다. 다시 선택해주세요.");
-                        System.out.print("계속하려면 엔터를 누르세요...");
-                        scanner.nextLine();
                     }
                 }
+
+                printWannaGoNext();
+
             } catch (InputMismatchException e) {
                 System.out.println("올바른 숫자를 입력해주세요.");
                 scanner.nextLine(); // 잘못된 입력 처리
-                System.out.print("계속하려면 엔터를 누르세요...");
-                scanner.nextLine();
+                printWannaGoNext();
             }
         }
     }
@@ -474,5 +472,10 @@ public class AdminView {
             response.setData(data);
         }
         return response;
+    }
+
+    private void printWannaGoNext() {
+        System.out.print("계속하려면 엔터를 누르세요...");
+        scanner.nextLine();
     }
 }
