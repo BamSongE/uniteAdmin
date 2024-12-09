@@ -12,13 +12,10 @@ public class LoginView {
     private final DataInputStream in;
     private final DataOutputStream out;
     private final Scanner scanner;
-    @Getter
-    private final Socket cliSocket;
 
-    public LoginView(Socket socket, DataInputStream in, DataOutputStream out) {
+    public LoginView(DataInputStream in, DataOutputStream out) {
         this.in = in;
         this.out = out;
-        this.cliSocket = socket;
         this.scanner = new Scanner(System.in);
     }
 
@@ -93,7 +90,7 @@ public class LoginView {
             if (response.getType() == Protocol.TYPE_RESPONSE &&
                     response.getCode() == Protocol.CODE_SUCCESS) {
                 System.out.println("로그인 성공!");
-                AdminView adminView = new AdminView(cliSocket, in, out);
+                AdminView adminView = new AdminView(in, out);
                 adminView.showMenu();
             } else {
                 System.out.println("로그인 실패: " + response.getDataAsString());

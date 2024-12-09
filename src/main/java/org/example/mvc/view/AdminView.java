@@ -15,7 +15,7 @@ public class AdminView {
     private final DataInputStream in;
     private final DataOutputStream out;
 
-    public AdminView(Socket socket, DataInputStream in, DataOutputStream out) {
+    public AdminView(DataInputStream in, DataOutputStream out) {
         this.scanner = new Scanner(System.in);
         this.in = in;
         this.out = out;
@@ -31,7 +31,7 @@ public class AdminView {
                 System.out.println("4. 호실 배정");
                 System.out.println("5. 비용 납부 확인");
                 System.out.println("6. 결핵진단서 제출 확인");
-                System.out.println("7. 퇴사 신청 확인 및 환불");
+                System.out.println("7. 퇴사 신청 조회 및 환불");
                 System.out.println("0. 로그아웃");
                 System.out.print("메뉴 선택: ");
 
@@ -44,6 +44,7 @@ public class AdminView {
                     case 4 -> handleRoomAssignment();
                     case 5 -> handlePaymentCheck();
                     case 6 -> handleDocumentCheck();
+                    case 7 -> handleWithDrawalRequest();
                     case 0 -> {
                         System.out.println("로그아웃 합니다.");
                         return;
@@ -259,6 +260,10 @@ public class AdminView {
         }
     }
 
+    /**
+     * 호실 배정 요청
+     * @throws IOException
+     */
     private void handleRoomAssignment() throws IOException {
         System.out.println("\n=== 호실 배정 ===");
 
@@ -378,6 +383,69 @@ public class AdminView {
             }
         }
     }
+
+    private void handleWithDrawalRequest() throws IOException {
+        while (true) {
+            System.out.println("=== 퇴사 신청 조회 및 환불 ===");
+            System.out.println("1. 퇴사 신청 조회");
+            System.out.println("2. 환불");
+            System.out.println("0. 이전 메뉴로");
+            System.out.print("선택: ");
+
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // 입력 버퍼 정리
+
+                switch (choice) {
+                    case 1 -> {
+                        Protocol protocol = new Protocol(Protocol.TYPE_WITHDRAWAL, Protocol.CODE_WITHDRAWAL_LIST);
+                        sendProtocol(protocol);
+
+                        // 서버 응답 처리
+                        Protocol response = readProtocol();
+                        if (response.getCode() == Protocol.CODE_SUCCESS) {
+                            System.out.println("퇴사 신청 목록:");
+                            System.out.println(new String(response.getData(), StandardCharsets.UTF_8));
+                        } else {
+                            System.out.println("퇴사 신청 목록 조회 중 오류 발생: " + new String(response.getData(), StandardCharsets.UTF_8));
+                        }
+                    }
+                    case 2 -> {
+                        System.out.print("환불 처리할 학생 ID를 입력하세요: ");
+                        Long withdrawalId = scanner.nextLong();
+                        scanner.nextLine(); // 입력 버퍼 정리
+
+                        Protocol protocol = new Protocol(Protocol.TYPE_WITHDRAWAL, Protocol.CODE_WITHDRAWAL_REFUND);
+                        String refundData = String.valueOf(withdrawalId); // 환불 데이터 설정
+                        protocol.setData(refundData.getBytes(StandardCharsets.UTF_8));
+                        sendProtocol(protocol);
+
+                        // 서버 응답 처리
+                        Protocol response = readProtocol();
+                        if (response.getCode() == Protocol.CODE_SUCCESS) {
+                            System.out.println(new String(response.getData(), StandardCharsets.UTF_8));
+                        } else {
+                            System.out.println("환불 처리 중 오류 발생: " + new String(response.getData(), StandardCharsets.UTF_8));
+                        }
+                    }
+                    case 0 -> {
+                        return; // 메뉴 종료
+                    }
+                    default -> {
+                        System.out.println("잘못된 선택입니다. 다시 선택해주세요.");
+                        System.out.print("계속하려면 엔터를 누르세요...");
+                        scanner.nextLine();
+                    }
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("올바른 숫자를 입력해주세요.");
+                scanner.nextLine(); // 잘못된 입력 처리
+                System.out.print("계속하려면 엔터를 누르세요...");
+                scanner.nextLine();
+            }
+        }
+    }
+
 
     private void sendProtocol(Protocol protocol) throws IOException {
         byte[] packetData = protocol.getPacket();

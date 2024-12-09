@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        try (Socket clientSocket = new Socket("172.30.86.32", 8888)) {
+        try (Socket clientSocket = new Socket("172.30.67.203", 8888)) {
             //안서호 pc ip 주소: 172.30.86.32, port: 8888
             //윤동근 pc ip 주소: 172.30.67.203, port: 8888
             Scanner sc = new Scanner(System.in);
@@ -28,7 +28,7 @@ public class Main {
             FirstView firstView = new FirstView();
 
             // LoginView 생성 및 의존성 주입
-            LoginView loginView = new LoginView(clientSocket, in, out);
+            LoginView loginView = new LoginView(in, out);
 
             System.out.println("안녕하세요. 기숙사 관리 시스템입니다.");
             firstView.view();
