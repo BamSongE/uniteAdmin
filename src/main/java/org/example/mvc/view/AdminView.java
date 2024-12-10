@@ -5,7 +5,6 @@ import org.example.global.Protocol;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -14,11 +13,13 @@ public class AdminView {
     private final Scanner scanner;
     private final DataInputStream in;
     private final DataOutputStream out;
+    private int selectStudentPreference;
 
     public AdminView(DataInputStream in, DataOutputStream out) {
         this.scanner = new Scanner(System.in);
         this.in = in;
         this.out = out;
+        selectStudentPreference = 1;
     }
 
     public void showMenu() {
@@ -27,7 +28,10 @@ public class AdminView {
                 System.out.println("\n=== 기숙사 관리자 시스템 ===");
                 System.out.println("1. 일정 및 비용 등록");
                 System.out.println("2. 신청자 조회");
-                System.out.println("3. 입사자 선발");
+                if(selectStudentPreference == 1)
+                    System.out.println("3. 입사자 선발 (1지망)");
+                else
+                    System.out.println("3. 입사자 선발 (2지망)");
                 System.out.println("4. 호실 배정");
                 System.out.println("5. 비용 납부 확인");
                 System.out.println("6. 결핵진단서 제출 확인");
@@ -77,11 +81,11 @@ public class AdminView {
         System.out.println("\n=== 신청자 조회 ===");
 
         // 서버에 신청자 조회 요청 보내기
-        scanner.nextLine(); // 입력 버퍼 비우기
         System.out.print("조회할 상태를 입력하세요 ('대기', '선발', '승인', '거부'): ");
         String status = scanner.nextLine();
         System.out.print("기숙사 선호도를 입력하세요 (1지망이면 '1', 2지망이면 '2'): ");
         int preference = scanner.nextInt();
+        scanner.nextLine();
 
         // 요청 데이터 생성
         String requestData = String.format("%s,%s", status, preference);
@@ -120,6 +124,7 @@ public class AdminView {
 
             try {
                 int choice = scanner.nextInt();
+                scanner.nextLine();
                 switch (choice) {
                     case 1 -> registerSchedule();
                     case 2 -> registerFee();
@@ -145,9 +150,9 @@ public class AdminView {
         System.out.println("\n=== 일정 등록 ===");
         System.out.print("일정 이름을 입력해주세요: ");
         String eventName = scanner.nextLine();
-        System.out.print("신청 시작일(YYYY-MM-DD 또는 YYYY-MM-DD HH:mm): ");
+        System.out.print("신청 시작일(YYYY-MM-DD HH:mm): ");
         String startDate = scanner.nextLine();
-        System.out.print("신청 종료일(YYYY-MM-DD 또는 YYYY-MM-DD HH:mm): ");
+        System.out.print("신청 종료일(YYYY-MM-DD HH:mm): ");
         String endDate = scanner.nextLine();
 
         // 요청 데이터 생성
@@ -236,8 +241,15 @@ public class AdminView {
     private void handleStudentSelection() throws IOException {
         System.out.println("\n=== 입사자 선발 ===");
 
-        // 서버로 입사자 선발 요청 보내기
         Protocol protocol = new Protocol(Protocol.TYPE_ROOM, Protocol.CODE_ROOM_SELECT);
+        if(selectStudentPreference == 1) {
+            System.out.println("1지망 학생을 선발합니다.");
+            protocol.setData("1");
+        } else {
+            System.out.println("2지망 학생을 선발합니다.");
+            protocol.setData("2");
+        }
+        // 서버로 입사자 선발 요청 보내기
         sendProtocol(protocol);
 
         //서버 응답 처리
@@ -255,6 +267,7 @@ public class AdminView {
 
             System.out.println("\n입사자 선발 결과:");
             System.out.println(successMessage);
+            selectStudentPreference++;
         } else if (protocol.getType() == Protocol.TYPE_RESPONSE && protocol.getCode() == Protocol.CODE_FAIL) {
             String errorMessage = protocol.getData() != null ? new String(protocol.getData(), StandardCharsets.UTF_8) : "알 수 없는 오류가 발생했습니다.";
             System.out.println("입사자 선발 중 오류 발생: " + errorMessage);
@@ -441,8 +454,7 @@ public class AdminView {
                 printWannaGoNext();
 
             } catch (InputMismatchException e) {
-                System.out.println("올바른 숫자를 입력해주세요.");
-                scanner.nextLine(); // 잘못된 입력 처리
+                System.out.println("올바른 숫자를 입력해주세요."); // 잘못된 입력 처리
                 printWannaGoNext();
             }
         }
@@ -478,7 +490,7 @@ public class AdminView {
         return response;
     }
 
-    private void printWannaGoNext() {
+    private void printWannaGoNext() { //결과를 확인하도록 잠시 멈추고 엔터키를 누르면 진행
         System.out.print("계속하려면 엔터를 누르세요...");
         scanner.nextLine();
     }

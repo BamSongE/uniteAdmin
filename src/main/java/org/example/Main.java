@@ -14,9 +14,9 @@ public class Main {
             //안서호 pc ip 주소: 172.30.86.32, port: 8888
             //윤동근 pc ip 주소: 172.30.67.203, port: 8888
             Scanner sc = new Scanner(System.in);
-
+            System.out.println("=============");
             System.out.println("서버 연결 성공");
-
+            System.out.println("=============");
             // 버퍼 스트림으로 감싸서 성능 향상
             BufferedOutputStream bos = new BufferedOutputStream(clientSocket.getOutputStream());
             BufferedInputStream bis = new BufferedInputStream(clientSocket.getInputStream());
@@ -33,7 +33,7 @@ public class Main {
             System.out.println("안녕하세요. 기숙사 관리 시스템입니다.");
             firstView.view();
             int choice = sc.nextInt();
-            while (choice != 3){
+            while (choice != 0){
                 if(choice == 1) {
                     loginView.printSignIn();
                 }
@@ -47,7 +47,9 @@ public class Main {
                 choice = sc.nextInt();
             }
 
+            System.out.println("===============");
             System.out.println("연결을 종료합니다.");
+            System.out.println("===============");
         } catch (UnknownHostException e) {
             System.err.println("호스트를 찾을 수 없습니다: " + e.getMessage());
         } catch (IOException e) {
