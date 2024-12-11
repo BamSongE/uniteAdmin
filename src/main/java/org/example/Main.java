@@ -2,15 +2,22 @@ package org.example;
 
 import org.example.mvc.view.FirstView;
 import org.example.mvc.view.LoginView;
-
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        try (Socket clientSocket = new Socket("172.30.67.203", 8888)) {
+        try (Socket clientSocket = new Socket()) {
+            int bufferSize = 3 * 1024 * 1024; //3MB
+            // 버퍼 크기 설정
+            clientSocket.setSendBufferSize(bufferSize); // 송신 버퍼 크기 설정
+            clientSocket.setReceiveBufferSize(bufferSize); // 수신 버퍼 크기 설정
+
+            // 서버와 연결
+            clientSocket.connect(new InetSocketAddress("172.30.67.203", 8888));
             //안서호 pc ip 주소: 172.30.86.32, port: 8888
             //윤동근 pc ip 주소: 172.30.67.203, port: 8888
             Scanner sc = new Scanner(System.in);

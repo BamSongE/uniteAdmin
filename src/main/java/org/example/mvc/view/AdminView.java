@@ -2,12 +2,16 @@ package org.example.mvc.view;
 
 import org.example.global.Protocol;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Base64;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.nio.file.Files;
 
 public class AdminView {
     private final Scanner scanner;
@@ -367,36 +371,60 @@ public class AdminView {
     }
 
     private void handleDocumentCheck() throws IOException {
-            System.out.println("\n=== 결핵진단서 제출 여부 명단 ===");
+        System.out.println("\n=== 결핵진단서 제출 확인 ===");
+
+        System.out.print("학번을 입력하세요: ");
+        String studentId = scanner.nextLine();
 
         try {
             Protocol protocol = new Protocol(Protocol.TYPE_DOCUMENT, Protocol.CODE_DOCUMENT_STATUS);
+            protocol.setData(studentId);
             sendProtocol(protocol);
 
-            protocol = readProtocol(); // 서버 응답 읽기
+            // 모든 데이터를 담을 ByteArrayOutputStream 사용
+            ByteArrayOutputStream totalData = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];  // 8KB 버퍼
 
-            // 응답 데이터 활용
-            if (protocol.getType() == Protocol.TYPE_RESPONSE && protocol.getCode() == Protocol.CODE_SUCCESS) {
-                String result = protocol.getData() != null
-                        ? new String(protocol.getData(), StandardCharsets.UTF_8)
-                        : "응답 데이터 없음";
-                System.out.println("\n결과:");
-                System.out.println(result);
-            } else if (protocol.getType() == Protocol.TYPE_RESPONSE && protocol.getCode() == Protocol.CODE_FAIL) {
-                String errorMessage = protocol.getData() != null
-                        ? new String(protocol.getData(), StandardCharsets.UTF_8)
-                        : "알 수 없는 오류가 발생했습니다.";
-                System.out.println("오류 발생: " + errorMessage);
-            } else {
-                System.out.println("서버에서 잘못된 응답을 받았습니다.");
+            // 헤더 읽기
+            byte type = in.readByte();
+            byte code = in.readByte();
+            int length = in.readShort() & 0xFFFF;  // unsigned short로 변환
+
+            // 데이터 읽기
+            int totalRead = 0;
+            while (totalRead < length) {
+                int bytesToRead = Math.min(buffer.length, length - totalRead);
+                int bytesRead = in.read(buffer, 0, bytesToRead);
+
+                if (bytesRead == -1) {
+                    throw new IOException("Unexpected end of stream");
+                }
+
+                totalData.write(buffer, 0, bytesRead);
+                totalRead += bytesRead;
             }
 
-            printWannaGoNext();
+            byte[] completeData = totalData.toByteArray();
+            String response = new String(completeData, StandardCharsets.UTF_8);
 
-        } catch (InputMismatchException e) {
-            System.out.println("올바른 숫자를 입력해주세요.");
-            printWannaGoNext();
+            String[] parts = response.split(",");
+            if (parts[0].equals("제출완료")) {
+                System.out.println("제출 상태: " + parts[0]);
+                System.out.println("제출 시간: " + parts[1]);
+
+                byte[] imageData = Base64.getDecoder().decode(parts[2]);
+                String fileName = "submitted_document_" + studentId + ".png";
+                Files.write(Path.of(fileName), imageData);
+                System.out.println("이미지가 " + fileName + "로 저장되었습니다.");
+            } else {
+                System.out.println("제출 상태: " + response);
+            }
+
+        } catch (Exception e) {
+            System.err.println("상태 확인 중 오류 발생: " + e.getMessage());
+            e.printStackTrace();
         }
+
     }
 
     private void handleWithDrawalRequest() throws IOException {
