@@ -442,6 +442,7 @@ public class AdminView {
                 switch (choice) {
                     case 1 -> {
                         Protocol protocol = new Protocol(Protocol.TYPE_WITHDRAWAL, Protocol.CODE_WITHDRAWAL_LIST);
+                        System.out.println("퇴사 신청한 학번 ID를 입력하세요: ");
                         sendProtocol(protocol);
 
                         // 서버 응답 처리
